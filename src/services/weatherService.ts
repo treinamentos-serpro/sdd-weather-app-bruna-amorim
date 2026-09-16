@@ -197,7 +197,7 @@ function mapForecastDays(
   }));
 
   if (!isFiveDayForecast(forecast)) {
-    throw new WeatherServiceError(INCOMPLETE_WEATHER_ERROR_MESSAGE);
+    throw new IncompleteWeatherError(INCOMPLETE_WEATHER_ERROR_MESSAGE);
   }
 
   return forecast;
