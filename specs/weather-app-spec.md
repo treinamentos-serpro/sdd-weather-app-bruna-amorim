@@ -12,6 +12,13 @@ o clima e alternar entre Celsius e Fahrenheit sem nova requisição.
 Ficam fora da versão 1: favoritos, histórico persistente, geolocalização
 automática, notificações, contas de usuário e modo offline avançado.
 
+## Histórias de usuário
+
+- Como usuário, quero pesquisar uma cidade e selecionar o local correto para consultar seu clima.
+- Como usuário, quero visualizar o clima atual e a previsão dos próximos cinco dias.
+- Como usuário, quero alternar entre Celsius e Fahrenheit sem repetir a busca.
+- Como usuário, quero receber mensagens claras quando a busca ou os dados meteorológicos falharem.
+
 ## 2. Fonte de dados e contrato
 
 A aplicação usará a API pública Open-Meteo, sem API key:
@@ -169,3 +176,22 @@ cinco dias e alternar a unidade.
 - Timeout: 10 segundos por requisição.
 - Tentativas automáticas: nenhuma; recuperação pelo botão de nova tentativa.
 - Persistência: nenhuma entre sessões.
+
+## Casos extremos
+
+- A consulta pode conter acentos, hífens, apóstrofos, espaços nas extremidades ou somente espaços.
+- O geocoding pode retornar zero resultados, resultados incompletos ou respostas fora de ordem.
+- O forecast pode falhar, exceder o timeout, retornar JSON inválido ou omitir campos essenciais.
+- Campos opcionais ausentes devem permanecer visíveis como `—`, sem invalidar os demais dados.
+
+## Premissas
+
+- A API Open-Meteo permanece disponível sem autenticação e mantém os contratos usados pela aplicação.
+- O navegador oferece suporte a Fetch, AbortController, Intl.DateTimeFormat e aos recursos de acessibilidade utilizados.
+- A aplicação não precisa persistir dados entre sessões nem funcionar offline na versão 1.
+
+## Riscos
+
+- Indisponibilidade ou alteração do contrato da Open-Meteo pode impedir buscas e previsões.
+- Diferenças de suporte entre navegadores podem afetar datas, timezones ou recursos de acessibilidade.
+- Respostas lentas ou incompletas podem degradar a experiência, mitigadas por timeout, validação e retry.
