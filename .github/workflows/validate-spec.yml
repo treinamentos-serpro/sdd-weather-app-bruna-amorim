@@ -28,10 +28,19 @@ jobs:
       - name: Validar seções obrigatórias
         run: |
           SPEC="specs/weather-app-spec.md"
-          REQUIRED=("Overview" "Functional Requirements" "User Stories" "Acceptance Criteria" "Non-Functional Requirements" "Edge Cases" "Assumptions" "Risks")
+          REQUIRED=(
+            "Overview|Escopo"
+            "Functional Requirements|Requisitos funcionais"
+            "User Stories|Histórias de usuário"
+            "Acceptance Criteria|Critérios de aceite"
+            "Non-Functional Requirements|Requisitos não funcionais"
+            "Edge Cases|Casos extremos"
+            "Assumptions|Premissas"
+            "Risks|Riscos"
+          )
           MISSING=0
           for section in "${REQUIRED[@]}"; do
-            if ! grep -qi "$section" "$SPEC"; then
+            if ! grep -Eqi "$section" "$SPEC"; then
               echo "::error::Seção obrigatória ausente na spec: $section"
               MISSING=1
             fi

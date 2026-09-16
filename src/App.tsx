@@ -1,79 +1,119 @@
-import { useState } from 'react';
-import type { Unit } from './types/weather';
-import { useWeather } from './hooks/useWeather';
-import SearchBar from './components/SearchBar';
-import UnitToggle from './components/UnitToggle';
+import { useEffect, useRef, useState } from 'react';
+import CityResultsList from './components/CityResultsList';
 import CurrentWeather from './components/CurrentWeather';
 import ForecastList from './components/ForecastList';
-import LoadingState from './components/states/LoadingState';
-import ErrorState from './components/states/ErrorState';
+import SearchBar from './components/SearchBar';
 import EmptyState from './components/states/EmptyState';
+import ErrorState from './components/states/ErrorState';
+import LoadingState from './components/states/LoadingState';
+import UnitToggle from './components/UnitToggle';
+import { useWeather } from './hooks/useWeather';
+import type { Unit } from './types/weather';
 
-/**
- * WeatherView — aplicação completa de previsão do tempo.
- *
- * Construída ao longo do treinamento de Spec-Driven Development com GitHub
- * Copilot, do briefing à entrega.
- */
 export default function App() {
-  const { status, data, error, query, search, retry } = useWeather();
+  const { status, data, cities, error, loadingMessage, query, search, selectCity, retry } =
+    useWeather();
   const [unit, setUnit] = useState<Unit>('celsius');
+  const mainRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (status !== 'idle' && status !== 'loading') {
+      mainRef.current?.focus();
+    }
+  }, [status]);
+
+  function renderContent() {
+    if (status === 'idle') {
+      return (
+        <EmptyState
+          hint="Digite uma cidade para visualizar o clima atual e a previsão dos próximos dias."
+          title="Busque uma cidade"
+        />
+      );
+    }
+
+    if (status === 'loading') {
+      return <LoadingState message={loadingMessage ?? 'Carregando...'} />;
+    }
+
+    if (status === 'results') {
+      return <CityResultsList cities={cities} onSelect={selectCity} />;
+    }
+
+    if (status === 'empty') {
+      return (
+        <EmptyState
+          hint="Tente outro nome, confira a grafia ou pesquise uma cidade próxima."
+          title="Nenhuma cidade encontrada."
+        />
+      );
+    }
+
+    if (status === 'error' || status === 'incomplete') {
+      return (
+        <ErrorState
+          message={error ?? 'Não foi possível carregar os dados. Tente novamente.'}
+          onRetry={() => {
+            void retry();
+          }}
+          title={status === 'incomplete' ? 'Dados meteorológicos incompletos' : undefined}
+        />
+      );
+    }
+
+    if (!data) {
+      return (
+        <EmptyState
+          hint="Digite uma cidade para visualizar o clima atual e a previsão dos próximos dias."
+          title="Busque uma cidade"
+        />
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <CurrentWeather city={data.city} current={data.current} unit={unit} />
+        <ForecastList forecast={data.forecast} timezone={data.city.timezone} unit={unit} />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen text-white">
-      <header className="border-b border-white/10">
-        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-2xl text-sun">
-              ☀️
-            </span>
-            <span className="text-lg font-bold">WeatherView</span>
+    <div className="min-h-screen bg-night-900 px-4 py-6 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8">
+        <header className="space-y-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-normal text-accent-400">
+                SDD Weather
+              </p>
+              <h1 className="mt-2 text-4xl font-bold tracking-normal text-white sm:text-5xl">
+                Previsão do tempo
+              </h1>
+              <p className="mt-3 text-sm text-white/75">
+                {query ? `Busca atual: ${query}` : 'Digite uma cidade para começar'}
+              </p>
+            </div>
+            <UnitToggle onChange={setUnit} unit={unit} />
           </div>
-          <div className="flex items-center gap-3">
-            <SearchBar onSearch={search} disabled={status === 'loading'} />
-            <UnitToggle unit={unit} onChange={setUnit} />
-          </div>
-        </div>
-      </header>
 
-      <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-        {status === 'idle' && (
-          <EmptyState
-            title="Busque uma cidade para começar"
-            hint="Ex.: Seattle, Lisboa, São Paulo…"
+          <SearchBar
+            disabled={status === 'loading'}
+            onSearch={(city) => {
+              void search(city);
+            }}
           />
-        )}
+        </header>
 
-        {status === 'loading' && <LoadingState />}
-
-        {status === 'empty' && (
-          <EmptyState
-            title={`Nenhuma cidade encontrada para "${query}"`}
-            hint="Verifique a grafia e tente novamente."
-          />
-        )}
-
-        {status === 'error' && error && <ErrorState message={error} onRetry={retry} />}
-
-        {status === 'success' && data && (
-          <>
-            <CurrentWeather city={data.city} current={data.current} unit={unit} />
-            <ForecastList forecast={data.forecast} unit={unit} />
-          </>
-        )}
-      </main>
-
-      <footer className="py-8 text-center text-sm text-white/40">
-        Dados por{' '}
-        <a
-          href="https://open-meteo.com/"
-          target="_blank"
-          rel="noreferrer"
-          className="text-accent-400 hover:underline"
+        <main
+          aria-busy={status === 'loading'}
+          aria-label="Resultado da busca"
+          ref={mainRef}
+          tabIndex={-1}
         >
-          Open-Meteo
-        </a>
-      </footer>
+          {renderContent()}
+        </main>
+      </div>
     </div>
   );
 }

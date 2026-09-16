@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #ffffff;
+  background: #0b1020;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(109, 124, 255, 0.22), transparent 34rem),
+    linear-gradient(135deg, #0b1020 0%, #11162a 52%, #1a2138 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
