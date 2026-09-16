@@ -49,13 +49,14 @@ export default function App() {
       );
     }
 
-    if (status === 'error') {
+    if (status === 'error' || status === 'incomplete') {
       return (
         <ErrorState
           message={error ?? 'Não foi possível carregar os dados. Tente novamente.'}
           onRetry={() => {
             void retry();
           }}
+          title={status === 'incomplete' ? 'Dados meteorológicos incompletos' : undefined}
         />
       );
     }

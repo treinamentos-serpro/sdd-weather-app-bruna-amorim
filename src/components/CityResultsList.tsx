@@ -7,7 +7,7 @@ interface CityResultsListProps {
 
 export default function CityResultsList({ cities, onSelect }: CityResultsListProps) {
   return (
-    <section aria-labelledby="city-results-heading" className="space-y-4">
+    <section aria-labelledby="city-results-heading" aria-live="polite" className="space-y-4">
       <h2 className="text-xl font-semibold text-white" id="city-results-heading">
         Escolha uma cidade
       </h2>

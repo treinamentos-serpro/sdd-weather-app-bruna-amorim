@@ -1,9 +1,14 @@
 interface ErrorStateProps {
   message: string;
   onRetry: () => void;
+  title?: string;
 }
 
-export default function ErrorState({ message, onRetry }: ErrorStateProps) {
+export default function ErrorState({
+  message,
+  onRetry,
+  title = 'Não foi possível carregar',
+}: ErrorStateProps) {
   return (
     <section
       className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white shadow-glass backdrop-blur-md"
@@ -11,7 +16,7 @@ export default function ErrorState({ message, onRetry }: ErrorStateProps) {
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Não foi possível carregar</h2>
+          <h2 className="text-xl font-semibold text-white">{title}</h2>
           <p className="mt-2 text-sm text-white/75">{message}</p>
         </div>
         <button

@@ -11,6 +11,10 @@ describe('format utility', () => {
     expect(formatForecastDayLabel('2026-09-19', 3)).toBe('Sáb');
   });
 
+  it('keeps the weekday tied to the local civil date in extreme timezones', () => {
+    expect(formatForecastDayLabel('2026-09-18', 2, 'Pacific/Kiritimati')).toBe('Sex');
+  });
+
   it('formats the short date string as dd/mm', () => {
     expect(getShortDate('2026-09-16')).toBe('16/09');
     expect(getShortDate('2027-01-02')).toBe('02/01');

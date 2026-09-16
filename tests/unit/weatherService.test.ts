@@ -176,7 +176,7 @@ describe('searchCities', () => {
     const request = searchCities('Seattle');
     const assertion = expect(request).rejects.toMatchObject({
       name: 'WeatherServiceError',
-      message: 'A conexão demorou mais de 10 segundos. Tente novamente.',
+      message: 'Não foi possível carregar os dados. Tente novamente.',
     });
 
     await vi.advanceTimersByTimeAsync(10_000);
@@ -244,7 +244,6 @@ describe('getWeather', () => {
         temperatureC: 19,
         humidity: 64,
         windSpeed: 9,
-        precipitation: 0,
         pressure: 1018,
         weatherCode: 2,
       },
@@ -294,7 +293,7 @@ describe('getWeather', () => {
     });
   });
 
-  it('maps precipitation null to zero in current weather', async () => {
+  it('omits precipitation when the optional value is null', async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
@@ -318,11 +317,9 @@ describe('getWeather', () => {
       ),
     );
 
-    await expect(getWeather(city)).resolves.toMatchObject({
-      current: {
-        precipitation: 0,
-      },
-    });
+    const weather = await getWeather(city);
+
+    expect(weather.current).not.toHaveProperty('precipitation');
   });
 
   it('normalizes nullable optional current fields without exposing null', async () => {
@@ -349,14 +346,16 @@ describe('getWeather', () => {
       ),
     );
 
-    await expect(getWeather(city)).resolves.toMatchObject({
+    const weather = await getWeather(city);
+
+    expect(weather).toMatchObject({
       current: {
         humidity: undefined,
         windSpeed: undefined,
-        precipitation: 0,
         pressure: undefined,
       },
     });
+    expect(weather.current).not.toHaveProperty('precipitation');
   });
 
   it('throws WeatherServiceError when the forecast payload is missing current or daily', async () => {

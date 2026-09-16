@@ -12,7 +12,7 @@ export function getShortDate(date: string) {
   return `${day}/${month}`;
 }
 
-export function formatForecastDayLabel(date: string, position: number, timezone = 'UTC') {
+export function formatForecastDayLabel(date: string, position: number, _timezone = 'UTC') {
   if (position === 0) {
     return 'Hoje';
   }
@@ -21,8 +21,9 @@ export function formatForecastDayLabel(date: string, position: number, timezone 
     return 'Amanhã';
   }
 
-  const shortWeekday = new Intl.DateTimeFormat('pt-BR', { timeZone: timezone, weekday: 'short' })
-    .format(new Date(`${date}T12:00:00Z`))
+  const [year, month, day] = date.split('-').map(Number);
+  const shortWeekday = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'short' })
+    .format(new Date(Date.UTC(year, month - 1, day)))
     .replace('.', '');
 
   return shortWeekday.charAt(0).toUpperCase() + shortWeekday.slice(1);

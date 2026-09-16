@@ -1,9 +1,21 @@
 import { useRef, useState } from 'react';
 
-import { getWeather, searchCities, WeatherServiceError } from '../services/weatherService';
+import {
+  getWeather,
+  IncompleteWeatherError,
+  searchCities,
+  WeatherServiceError,
+} from '../services/weatherService';
 import type { City, WeatherData } from '../types/weather';
 
-export type WeatherStatus = 'idle' | 'loading' | 'results' | 'success' | 'error' | 'empty';
+export type WeatherStatus =
+  | 'idle'
+  | 'loading'
+  | 'results'
+  | 'success'
+  | 'error'
+  | 'incomplete'
+  | 'empty';
 
 type LastOperation = { type: 'search'; name: string } | { type: 'selectCity'; city: City };
 
@@ -144,7 +156,7 @@ export function useWeather(): UseWeatherResult {
 
     setState((current) => ({
       ...current,
-      status: 'error',
+      status: error instanceof IncompleteWeatherError ? 'incomplete' : 'error',
       data: null,
       error: getErrorMessage(error),
       loadingMessage: null,

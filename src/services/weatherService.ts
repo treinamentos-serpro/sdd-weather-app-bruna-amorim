@@ -6,7 +6,6 @@ const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_QUERY_LENGTH = 100;
 const FORECAST_DAYS = 5;
 const DEFAULT_TIMEZONE = 'UTC';
-const TIMEOUT_ERROR_MESSAGE = 'A conexão demorou mais de 10 segundos. Tente novamente.';
 const NETWORK_ERROR_MESSAGE = 'Não foi possível carregar os dados. Tente novamente.';
 const CITY_REQUEST_ERROR_MESSAGE = 'Não foi possível carregar os dados. Tente novamente.';
 const WEATHER_REQUEST_ERROR_MESSAGE = 'Não foi possível carregar os dados. Tente novamente.';
@@ -55,6 +54,8 @@ export class WeatherServiceError extends Error {
   }
 }
 
+export class IncompleteWeatherError extends WeatherServiceError {}
+
 async function fetchWithTimeout(url: string): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -63,7 +64,7 @@ async function fetchWithTimeout(url: string): Promise<Response> {
     return await fetch(url, { signal: controller.signal });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new WeatherServiceError(TIMEOUT_ERROR_MESSAGE);
+      throw new WeatherServiceError(NETWORK_ERROR_MESSAGE);
     }
 
     throw new WeatherServiceError(NETWORK_ERROR_MESSAGE);
@@ -147,7 +148,7 @@ export async function getWeather(city: City): Promise<WeatherData> {
   }
 
   if (!isRecord(data) || !isRecord(data.current) || !isRecord(data.daily)) {
-    throw new WeatherServiceError(INCOMPLETE_WEATHER_ERROR_MESSAGE);
+    throw new IncompleteWeatherError(INCOMPLETE_WEATHER_ERROR_MESSAGE);
   }
 
   return {
@@ -160,15 +161,17 @@ export async function getWeather(city: City): Promise<WeatherData> {
 
 function mapCurrentWeather(current: OpenMeteoCurrentWeather): WeatherData['current'] {
   if (!isFiniteNumber(current.temperature_2m) || !isFiniteNumber(current.weather_code)) {
-    throw new WeatherServiceError(INCOMPLETE_WEATHER_ERROR_MESSAGE);
+    throw new IncompleteWeatherError(INCOMPLETE_WEATHER_ERROR_MESSAGE);
   }
+
+  const precipitation = toOptionalNumber(current.precipitation);
 
   return {
     ...(isNonEmptyString(current.time) ? { time: current.time } : {}),
     temperatureC: current.temperature_2m,
     humidity: toOptionalNumber(current.relative_humidity_2m),
     windSpeed: toOptionalNumber(current.wind_speed_10m),
-    precipitation: toOptionalNumber(current.precipitation) ?? 0,
+    ...(precipitation === undefined ? {} : { precipitation }),
     pressure: toOptionalNumber(current.pressure_msl),
     weatherCode: current.weather_code,
   };
@@ -183,7 +186,7 @@ function mapForecastDays(
     !hasFiveItems(daily.temperature_2m_max) ||
     !hasFiveItems(daily.temperature_2m_min)
   ) {
-    throw new WeatherServiceError(INCOMPLETE_WEATHER_ERROR_MESSAGE);
+    throw new IncompleteWeatherError(INCOMPLETE_WEATHER_ERROR_MESSAGE);
   }
 
   const forecast = daily.time.map((date, index) => ({
